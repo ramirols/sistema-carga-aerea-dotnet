@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="SistemaCargaAerea.Api/SistemaCargaAerea.Api.csproj" />
+    <Project Path="SistemaCargaAerea.Application/SistemaCargaAerea.Application.csproj" />
+    <Project Path="SistemaCargaAerea.Domain/SistemaCargaAerea.Domain.csproj" />
+    <Project Path="SistemaCargaAerea.Infrastructure/SistemaCargaAerea.Infrastructure.csproj" />
+  </Folder>
+</Solution>

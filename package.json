@@ -1,0 +1,34 @@
+{
+  "name": "sistema-carga-aerea-dotnet",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "backend": "dotnet watch --project backend/SistemaCargaAerea/SistemaCargaAerea.Api/SistemaCargaAerea.Api.csproj run",
+    "frontend": "pnpm --dir frontend start",
+    "dev": "concurrently -k -n BACKEND,FRONTEND -c blue,magenta \"pnpm backend\" \"pnpm frontend\"",
+    "restore:backend": "dotnet restore backend/SistemaCargaAerea.sln",
+    "restore:frontend": "pnpm --dir frontend install",
+    "restore": "pnpm restore:backend && pnpm restore:frontend",
+    "build:backend": "dotnet build backend/SistemaCargaAerea.sln",
+    "build:frontend": "pnpm --dir frontend build",
+    "build": "pnpm build:backend && pnpm build:frontend",
+    "test:backend": "dotnet test backend/SistemaCargaAerea.sln",
+    "test:frontend": "pnpm --dir frontend test",
+    "test": "pnpm test:backend && pnpm test:frontend"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11.15.1",
+      "onFail": "download"
+    }
+  },
+  "type": "module",
+  "devDependencies": {
+    "concurrently": "^10.0.4"
+  }
+}

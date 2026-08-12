@@ -1,0 +1,34 @@
+# Visual Studio y .NET
+.vs/
+**/bin/
+**/obj/
+*.user
+*.suo
+
+# Node y Angular
+**/node_modules/
+**/.angular/
+**/dist/
+**/coverage/
+.pnpm-store/
+
+# Configuración privada
+.env
+.env.*
+!.env.example
+appsettings.Local.json
+secrets.json
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
