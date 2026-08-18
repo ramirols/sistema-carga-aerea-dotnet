@@ -19,7 +19,7 @@ namespace SistemaCargaAerea.Infrastructure.Repositories
         }
 
         public async Task<IReadOnlyCollection<Encomienda>> ListarAsync(
-            EstadoEncomienda? estado = null,
+            EstadoEncomiendaClave? estado = null,
             long? vueloId = null,
             CancellationToken cancellationToken = default)
         {

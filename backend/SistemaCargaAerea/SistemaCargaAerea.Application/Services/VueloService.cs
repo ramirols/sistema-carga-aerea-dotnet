@@ -30,7 +30,7 @@ namespace SistemaCargaAerea.Application.Services
         public async Task<IReadOnlyCollection<VueloResponse>>
             ListarAsync(
                 string? destino,
-                EstadoVuelo? estado,
+                EstadoVueloClave? estado,
                 CancellationToken cancellationToken)
         {
             var vuelos = await _vueloRepository.ListarAsync(
@@ -211,12 +211,12 @@ namespace SistemaCargaAerea.Application.Services
 
                     var pesoLiberado = vuelo.Encomiendas
                         .Where(x =>
-                            x.Estado == EstadoEncomienda.Asignada)
+                            x.Estado == EstadoEncomiendaClave.Asignada)
                         .Sum(x => x.Peso);
 
                     foreach (var encomienda in vuelo.Encomiendas
                                  .Where(x =>
-                                     x.Estado == EstadoEncomienda.Asignada))
+                                     x.Estado == EstadoEncomiendaClave.Asignada))
                     {
                         encomienda.LiberarDeVuelo();
                     }

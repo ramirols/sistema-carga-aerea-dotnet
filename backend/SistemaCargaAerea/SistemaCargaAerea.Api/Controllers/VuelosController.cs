@@ -20,7 +20,7 @@ namespace SistemaCargaAerea.Api.Controllers
         [HttpGet]
         public async Task<ActionResult> Listar(
             [FromQuery] string? destino,
-            [FromQuery] EstadoVuelo? estado,
+            [FromQuery] EstadoVueloClave? estado,
             CancellationToken cancellationToken)
         {
             var resultado = await _service.ListarAsync(

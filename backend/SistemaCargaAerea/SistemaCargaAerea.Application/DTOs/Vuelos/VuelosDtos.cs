@@ -15,7 +15,7 @@ public sealed record VueloResponse(
     decimal PesoMaximo,
     decimal PesoActual,
     decimal PesoDisponible,
-    EstadoVuelo Estado);
+    EstadoVueloClave Estado);
 
 public sealed record CrearVueloRequest(
     [Required, StringLength(10)] string CodigoVuelo,

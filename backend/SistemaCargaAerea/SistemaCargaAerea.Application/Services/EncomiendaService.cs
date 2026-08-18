@@ -26,7 +26,7 @@ namespace SistemaCargaAerea.Application.Services
 
         public async Task<IReadOnlyCollection<EncomiendaResponse>>
             ListarAsync(
-                EstadoEncomienda? estado,
+                EstadoEncomiendaClave? estado,
                 long? vueloId,
                 CancellationToken cancellationToken)
         {
@@ -126,7 +126,7 @@ namespace SistemaCargaAerea.Application.Services
                 ?? throw new NotFoundException(
                     $"No se encontró la encomienda {id}.");
 
-            if (encomienda.Estado != EstadoEncomienda.EnAlmacen)
+            if (encomienda.Estado != EstadoEncomiendaClave.EnAlmacen)
             {
                 throw new InvalidOperationException(
                     "Solo se pueden eliminar encomiendas en almacén.");

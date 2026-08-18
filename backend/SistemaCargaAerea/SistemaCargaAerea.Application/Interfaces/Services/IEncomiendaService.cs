@@ -9,7 +9,7 @@ namespace SistemaCargaAerea.Application.Interfaces.Services
     public interface IEncomiendaService
     {
         Task<IReadOnlyCollection<EncomiendaResponse>> ListarAsync(
-            EstadoEncomienda? estado,
+            EstadoEncomiendaClave? estado,
             long? vueloId,
             CancellationToken cancellationToken);
 

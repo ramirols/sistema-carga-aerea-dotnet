@@ -10,7 +10,7 @@ namespace SistemaCargaAerea.Application.Interfaces.Services
     {
         Task<IReadOnlyCollection<VueloResponse>> ListarAsync(
             string? destino,
-            EstadoVuelo? estado,
+            EstadoVueloClave? estado,
             CancellationToken cancellationToken);
 
         Task<VueloResponse> ObtenerAsync(

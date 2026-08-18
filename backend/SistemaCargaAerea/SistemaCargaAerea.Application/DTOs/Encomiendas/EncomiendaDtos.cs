@@ -13,7 +13,7 @@ public sealed record EncomiendaResponse(
     decimal Peso,
     string Remitente,
     string Destinatario,
-    EstadoEncomienda Estado,
+    EstadoEncomiendaClave Estado,
     long? VueloId,
     string? CodigoVuelo);
 

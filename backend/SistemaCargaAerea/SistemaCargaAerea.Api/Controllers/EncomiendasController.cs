@@ -18,7 +18,7 @@ namespace SistemaCargaAerea.Api.Controllers
 
         [HttpGet]
         public async Task<ActionResult> Listar(
-            [FromQuery] EstadoEncomienda? estado,
+            [FromQuery] EstadoEncomiendaClave? estado,
             [FromQuery] long? vueloId,
             CancellationToken cancellationToken)
         {

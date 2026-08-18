@@ -9,7 +9,7 @@ namespace SistemaCargaAerea.Application.Interfaces.Repositories
     public interface IEncomiendaRepository
     {
         Task<IReadOnlyCollection<Encomienda>> ListarAsync(
-        EstadoEncomienda? estado = null,
+        EstadoEncomiendaClave? estado = null,
         long? vueloId = null,
         CancellationToken cancellationToken = default);
 

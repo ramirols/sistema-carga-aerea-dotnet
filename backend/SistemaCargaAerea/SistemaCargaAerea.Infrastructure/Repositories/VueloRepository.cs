@@ -20,7 +20,7 @@ namespace SistemaCargaAerea.Infrastructure.Repositories
 
         public async Task<IReadOnlyCollection<Vuelo>> ListarAsync(
             string? destino = null,
-            EstadoVuelo? estado = null,
+            EstadoVueloClave? estado = null,
             CancellationToken cancellationToken = default)
         {
             IQueryable<Vuelo> query = _context.Vuelos

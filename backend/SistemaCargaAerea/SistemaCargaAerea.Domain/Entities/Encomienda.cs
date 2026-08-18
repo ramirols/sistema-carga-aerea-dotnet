@@ -8,44 +8,34 @@ namespace SistemaCargaAerea.Domain.Entities
     public class Encomienda
     {
         public long Id { get; private set; }
-
         public string Codigo { get; private set; } = string.Empty;
-
         public string Descripcion { get; private set; } = string.Empty;
-
         public decimal Peso { get; private set; }
-
-        public string Remitente { get; private set; } = string.Empty;
-
-        public string Destinatario { get; private set; } = string.Empty;
-
-        public EstadoEncomienda Estado { get; private set; }
-
+        public long RemitenteId { get; private set; }
+        public Persona? Remitente { get; private set; }
+        public long DestinatarioId { get; private set; }
+        public Persona? Destinatario { get; private set; }
+        public long EstadoId { get; private set; }
+        public EstadoEncomienda? Estado { get; private set; }
         public long? VueloId { get; private set; }
-
         public Vuelo? Vuelo { get; private set; }
-
         public DateTime FechaRegistro { get; private set; }
 
-        public DateTime? FechaActualizacion { get; private set; }
-
-        public byte[] Version { get; private set; } = [];
 
         private Encomienda()
         {
         }
-
-        public Encomienda(
-            string codigo,
-            string descripcion,
-            decimal peso,
-            string remitente,
-            string destinatario)
+        public Encomienda(string codigo, string descripcion, decimal peso, long remitenteId, long destinatarioId, EstadoEncomienda estadoInicial)
         {
-            CambiarCodigo(codigo);
-            CambiarDatos(descripcion, peso, remitente, destinatario);
+            if (estadoInicial.Clave != EstadoEncomiendaClave.EnAlmacen)
+                throw new ArgumentException(
+                    "Una encomienda nueva debe crearse en estado 'En almacén'.", nameof(estadoInicial));
 
-            Estado = EstadoEncomienda.EnAlmacen;
+            CambiarCodigo(codigo);
+            CambiarDatos(descripcion, peso, remitenteId, destinatarioId);
+
+            EstadoId = estadoInicial.Id;
+            Estado = estadoInicial;
             FechaRegistro = DateTime.UtcNow;
         }
 
@@ -53,55 +43,70 @@ namespace SistemaCargaAerea.Domain.Entities
             string codigo,
             string descripcion,
             decimal peso,
-            string remitente,
-            string destinatario)
+            long remitenteId,
+            long destinatarioId)
         {
-            if (Estado != EstadoEncomienda.EnAlmacen)
-                throw new InvalidOperationException(
-                    "Solo se pueden modificar encomiendas que estén en almacén.");
+            ValidarModificable();
 
             CambiarCodigo(codigo);
-            CambiarDatos(descripcion, peso, remitente, destinatario);
-            FechaActualizacion = DateTime.UtcNow;
+            CambiarDatos(descripcion, peso, remitenteId, destinatarioId);
         }
 
-        public void AsignarAVuelo(long vueloId)
+        public void AsignarAVuelo(Vuelo vuelo, EstadoEncomienda estadoAsignada)
         {
-            if (Estado != EstadoEncomienda.EnAlmacen)
-                throw new InvalidOperationException(
-                    "La encomienda no está disponible en almacén.");
+            ValidarClaveEsperada(estadoAsignada, EstadoEncomiendaClave.Asignada);
 
-            VueloId = vueloId;
-            Estado = EstadoEncomienda.Asignada;
-            FechaActualizacion = DateTime.UtcNow;
+            if (Estado?.Clave != EstadoEncomiendaClave.EnAlmacen)
+                throw new InvalidOperationException("La encomienda no está disponible en almacén.");
+
+            VueloId = vuelo.Id;
+            Vuelo = vuelo;
+            EstadoId = estadoAsignada.Id;
+            Estado = estadoAsignada;
         }
 
-        public void LiberarDeVuelo()
+        public void LiberarDeVuelo(EstadoEncomienda estadoEnAlmacen)
         {
-            if (Estado == EstadoEncomienda.Embarcada)
-                throw new InvalidOperationException(
-                    "Una encomienda embarcada no puede liberarse.");
+            ValidarClaveEsperada(estadoEnAlmacen, EstadoEncomiendaClave.EnAlmacen);
+
+            if (Estado?.Clave == EstadoEncomiendaClave.Embarcada)
+                throw new InvalidOperationException("Una encomienda embarcada no puede liberarse.");
 
             VueloId = null;
-            Estado = EstadoEncomienda.EnAlmacen;
-            FechaActualizacion = DateTime.UtcNow;
+            Vuelo = null;
+            EstadoId = estadoEnAlmacen.Id;
+            Estado = estadoEnAlmacen;
         }
 
-        public void MarcarComoEmbarcada()
+        public void MarcarComoEmbarcada(EstadoEncomienda estadoEmbarcada)
         {
-            if (Estado != EstadoEncomienda.Asignada || VueloId is null)
-                throw new InvalidOperationException(
-                    "La encomienda debe estar asignada a un vuelo.");
+            ValidarClaveEsperada(estadoEmbarcada, EstadoEncomiendaClave.Embarcada);
 
-            Estado = EstadoEncomienda.Embarcada;
-            FechaActualizacion = DateTime.UtcNow;
+            if (Estado?.Clave != EstadoEncomiendaClave.Asignada || VueloId is null)
+                throw new InvalidOperationException("La encomienda debe estar asignada a un vuelo.");
+
+            EstadoId = estadoEmbarcada.Id;
+            Estado = estadoEmbarcada;
+        }
+
+        private void ValidarModificable()
+        {
+            if (Estado?.Clave != EstadoEncomiendaClave.EnAlmacen)
+                throw new InvalidOperationException(
+                    "Solo se pueden modificar encomiendas que estén en almacén.");
+        }
+
+        private static void ValidarClaveEsperada(EstadoEncomienda estado, EstadoEncomiendaClave esperada)
+        {
+            if (estado.Clave != esperada)
+                throw new ArgumentException(
+                    $"El estado provisto debe tener la clave '{esperada}'.", nameof(estado));
         }
 
         private void CambiarCodigo(string codigo)
         {
             if (string.IsNullOrWhiteSpace(codigo))
-                throw new ArgumentException(
-                    "El código de la encomienda es obligatorio.");
+                throw new ArgumentException("El código de la encomienda es obligatorio.");
 
             Codigo = codigo.Trim().ToUpperInvariant();
         }
@@ -109,29 +114,28 @@ namespace SistemaCargaAerea.Domain.Entities
         private void CambiarDatos(
             string descripcion,
             decimal peso,
-            string remitente,
-            string destinatario)
+            long remitenteId,
+            long destinatarioId)
         {
             if (string.IsNullOrWhiteSpace(descripcion))
-                throw new ArgumentException(
-                    "La descripción es obligatoria.");
+                throw new ArgumentException("La descripción es obligatoria.");
 
             if (peso <= 0)
-                throw new ArgumentException(
-                    "El peso debe ser mayor que cero.");
+                throw new ArgumentException("El peso debe ser mayor que cero.");
 
-            if (string.IsNullOrWhiteSpace(remitente))
-                throw new ArgumentException(
-                    "El remitente es obligatorio.");
+            if (remitenteId <= 0)
+                throw new ArgumentException("El remitente es obligatorio.");
 
-            if (string.IsNullOrWhiteSpace(destinatario))
-                throw new ArgumentException(
-                    "El destinatario es obligatorio.");
+            if (destinatarioId <= 0)
+                throw new ArgumentException("El destinatario es obligatorio.");
+
+            if (remitenteId == destinatarioId)
+                throw new ArgumentException("El remitente y el destinatario no pueden ser la misma persona.");
 
             Descripcion = descripcion.Trim();
             Peso = peso;
-            Remitente = remitente.Trim();
-            Destinatario = destinatario.Trim();
+            RemitenteId = remitenteId;
+            DestinatarioId = destinatarioId;
         }
     }
 }
