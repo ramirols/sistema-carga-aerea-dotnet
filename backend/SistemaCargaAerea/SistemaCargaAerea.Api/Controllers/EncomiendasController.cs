@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SistemaCargaAerea.Application.DTOs.Encomiendas;
 using SistemaCargaAerea.Application.Interfaces.Services;
 using SistemaCargaAerea.Domain.Enums;
@@ -7,6 +8,7 @@ namespace SistemaCargaAerea.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class EncomiendasController : ControllerBase
     {
         private readonly IEncomiendaService _service;
@@ -17,61 +19,35 @@ namespace SistemaCargaAerea.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult> Listar(
-            [FromQuery] EstadoEncomienda? estado,
-            [FromQuery] long? vueloId,
-            CancellationToken cancellationToken)
-        {
-            return Ok(await _service.ListarAsync(
-                estado,
-                vueloId,
-                cancellationToken));
-        }
+        public async Task<ActionResult<List<EncomiendaResponse>>> ObtenerTodos(CancellationToken ct) =>
+            Ok(await _service.ObtenerTodosAsync(ct));
 
         [HttpGet("{id:long}")]
-        public async Task<ActionResult> Obtener(
-            long id,
-            CancellationToken cancellationToken)
-        {
-            return Ok(await _service.ObtenerAsync(
-                id,
-                cancellationToken));
-        }
+        public async Task<ActionResult<EncomiendaResponse>> ObtenerPorId(long id, CancellationToken ct) =>
+            Ok(await _service.ObtenerPorIdAsync(id, ct));
 
         [HttpPost]
-        public async Task<ActionResult> Crear(
-            [FromBody] CrearEncomiendaRequest request,
-            CancellationToken cancellationToken)
+        public async Task<ActionResult<EncomiendaResponse>> Crear(
+            [FromBody] CrearEncomiendaRequest request, CancellationToken ct)
         {
-            var resultado = await _service.CrearAsync(
-                request,
-                cancellationToken);
-
-            return CreatedAtAction(
-                nameof(Obtener),
-                new { id = resultado.Id },
-                resultado);
+            var resultado = await _service.CrearAsync(request, ct);
+            return CreatedAtAction(nameof(ObtenerPorId), new { id = resultado.Id }, resultado);
         }
 
         [HttpPut("{id:long}")]
-        public async Task<ActionResult> Actualizar(
-            long id,
-            [FromBody] ActualizarEncomiendaRequest request,
-            CancellationToken cancellationToken)
-        {
-            return Ok(await _service.ActualizarAsync(
-                id,
-                request,
-                cancellationToken));
-        }
+        public async Task<ActionResult<EncomiendaResponse>> Actualizar(
+            long id, [FromBody] ActualizarEncomiendaRequest request, CancellationToken ct) =>
+            Ok(await _service.ActualizarAsync(id, request, ct));
 
         [HttpDelete("{id:long}")]
-        public async Task<IActionResult> Eliminar(
-            long id,
-            CancellationToken cancellationToken)
+        public async Task<IActionResult> Eliminar(long id, CancellationToken ct)
         {
-            await _service.EliminarAsync(id, cancellationToken);
+            await _service.EliminarAsync(id, ct);
             return NoContent();
         }
+
+        [HttpDelete("{id:long}/vuelo")]
+        public async Task<ActionResult<EncomiendaResponse>> LiberarDeVuelo(long id, CancellationToken ct) =>
+            Ok(await _service.LiberarDeVueloAsync(id, ct));
     }
 }

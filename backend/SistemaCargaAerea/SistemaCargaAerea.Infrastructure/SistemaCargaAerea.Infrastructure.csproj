@@ -14,8 +14,6 @@
   <ItemGroup>
     <Folder Include="Data\Migrations\" />
     <Folder Include="Data\Seed\" />
-    <Folder Include="Exceptions\" />
-    <Folder Include="Security\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -29,6 +27,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+	<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.9.0" />
+	<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.9.0" />
   </ItemGroup>
 
 </Project>

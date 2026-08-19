@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SistemaCargaAerea.Domain.Exceptions;
-
+using SistemaCargaAerea.Application.Exceptions;
 namespace SistemaCargaAerea.Api.Middlewares
 {
     public class ExceptionMiddleware

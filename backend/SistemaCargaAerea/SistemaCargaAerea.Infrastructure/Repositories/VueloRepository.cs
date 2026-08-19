@@ -13,77 +13,40 @@ namespace SistemaCargaAerea.Infrastructure.Repositories
     {
         private readonly AppDbContext _context;
 
-        public VueloRepository(AppDbContext context)
+        public VueloRepository(AppDbContext context) => _context = context;
+
+        public Task<Vuelo?> ObtenerPorIdAsync(long id, bool incluirRelaciones, CancellationToken ct)
         {
-            _context = context;
+            var query = _context.Vuelos.AsQueryable();
+            if (incluirRelaciones)
+                query = query
+                    .Include(v => v.Destino)
+                    .Include(v => v.Estado);
+            return query.FirstOrDefaultAsync(x => x.Id == id, ct);
         }
 
-        public async Task<IReadOnlyCollection<Vuelo>> ListarAsync(
-            string? destino = null,
-            EstadoVuelo? estado = null,
-            CancellationToken cancellationToken = default)
+        public Task<List<Vuelo>> ObtenerTodosAsync(CancellationToken ct) =>
+            _context.Vuelos
+                .AsNoTracking()
+                .Include(v => v.Destino)
+                .Include(v => v.Estado)
+                .OrderBy(v => v.FechaVuelo)
+                .ThenBy(v => v.HoraVuelo)
+                .ToListAsync(ct);
+
+        public Task<bool> ExisteCodigoVueloAsync(string codigoVuelo, long? idExcluir, CancellationToken ct)
         {
-            IQueryable<Vuelo> query = _context.Vuelos
-                .AsNoTracking();
-
-            if (!string.IsNullOrWhiteSpace(destino))
-            {
-                query = query.Where(x =>
-                    x.Destino.Contains(destino));
-            }
-
-            if (estado.HasValue)
-            {
-                query = query.Where(x =>
-                    x.Estado == estado.Value);
-            }
-
-            return await query
-                .OrderBy(x => x.FechaVuelo)
-                .ThenBy(x => x.HoraVuelo)
-                .ToListAsync(cancellationToken);
-        }
-
-        public Task<Vuelo?> ObtenerPorIdAsync(
-            long id,
-            bool incluirEncomiendas = false,
-            CancellationToken cancellationToken = default)
-        {
-            IQueryable<Vuelo> query = _context.Vuelos;
-
-            if (incluirEncomiendas)
-                query = query.Include(x => x.Encomiendas);
-
-            return query.FirstOrDefaultAsync(
-                x => x.Id == id,
-                cancellationToken);
-        }
-
-        public Task<bool> ExisteCodigoAsync(
-            string codigo,
-            long? idExcluir = null,
-            CancellationToken cancellationToken = default)
-        {
-            var codigoNormalizado = codigo.Trim().ToUpper();
-
+            var codigo = codigoVuelo.Trim().ToUpperInvariant();
             return _context.Vuelos.AnyAsync(
-                x => x.CodigoVuelo == codigoNormalizado &&
-                     (!idExcluir.HasValue || x.Id != idExcluir.Value),
-                cancellationToken);
+                x => x.CodigoVuelo == codigo && (!idExcluir.HasValue || x.Id != idExcluir.Value), ct);
         }
+        public Task<bool> ExisteConEstadoAsync(long estadoId, CancellationToken ct) =>
+            _context.Vuelos.AnyAsync(x => x.EstadoId == estadoId, ct);
+        public void Agregar(Vuelo vuelo) => _context.Vuelos.Add(vuelo);
 
-        public Task AgregarAsync(
-            Vuelo vuelo,
-            CancellationToken cancellationToken = default)
-        {
-            return _context.Vuelos
-                .AddAsync(vuelo, cancellationToken)
-                .AsTask();
-        }
+        public void Eliminar(Vuelo vuelo) => _context.Vuelos.Remove(vuelo);
 
-        public void Eliminar(Vuelo vuelo)
-        {
-            _context.Vuelos.Remove(vuelo);
-        }
+        public Task<bool> ExisteConDestinoAsync(long destinoId, CancellationToken ct) =>
+                    _context.Vuelos.AnyAsync(x => x.DestinoId == destinoId, ct);
     }
 }

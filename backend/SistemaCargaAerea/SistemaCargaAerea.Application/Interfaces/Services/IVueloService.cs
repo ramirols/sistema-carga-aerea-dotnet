@@ -8,39 +8,13 @@ namespace SistemaCargaAerea.Application.Interfaces.Services
 {
     public interface IVueloService
     {
-        Task<IReadOnlyCollection<VueloResponse>> ListarAsync(
-            string? destino,
-            EstadoVuelo? estado,
-            CancellationToken cancellationToken);
-
-        Task<VueloResponse> ObtenerAsync(
-            long id,
-            CancellationToken cancellationToken);
-
-        Task<VueloResponse> CrearAsync(
-            CrearVueloRequest request,
-            CancellationToken cancellationToken);
-
-        Task<VueloResponse> ActualizarAsync(
-            long id,
-            ActualizarVueloRequest request,
-            CancellationToken cancellationToken);
-
-        Task EliminarAsync(
-            long id,
-            CancellationToken cancellationToken);
-
-        Task AsignarEncomiendasAsync(
-            long vueloId,
-            IReadOnlyCollection<long> encomiendaIds,
-            CancellationToken cancellationToken);
-
-        Task AutorizarDespachoAsync(
-            long vueloId,
-            CancellationToken cancellationToken);
-
-        Task CancelarAsync(
-            long vueloId,
-            CancellationToken cancellationToken);
+        Task<VueloResponse> ObtenerPorIdAsync(long id, CancellationToken ct);
+        Task<List<VueloResponse>> ObtenerTodosAsync(CancellationToken ct);
+        Task<VueloResponse> CrearAsync(CrearVueloRequest request, CancellationToken ct);
+        Task<VueloResponse> ActualizarAsync(long id, ActualizarVueloRequest request, CancellationToken ct);
+        Task EliminarAsync(long id, CancellationToken ct);
+        Task<VueloResponse> IniciarVueloAsync(long id, CancellationToken ct);
+        Task<VueloResponse> AterrizarAsync(long id, CancellationToken ct);
+        Task<VueloResponse> CancelarAsync(long id, CancellationToken ct);
     }
 }

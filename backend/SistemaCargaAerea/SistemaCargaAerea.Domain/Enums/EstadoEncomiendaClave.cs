@@ -4,10 +4,10 @@ using System.Text;
 
 namespace SistemaCargaAerea.Domain.Enums
 {
-    public enum EstadoVuelo
+    public enum EstadoEncomiendaClave
     {
-        Programado = 1,
-        Despachado = 2,
-        Cancelado = 3
+        EnAlmacen,
+        Asignada,
+        Embarcada
     }
 }
