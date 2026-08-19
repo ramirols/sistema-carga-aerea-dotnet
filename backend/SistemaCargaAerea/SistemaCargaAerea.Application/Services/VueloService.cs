@@ -1,10 +1,10 @@
 ﻿using SistemaCargaAerea.Application.DTOs.Vuelos;
+using SistemaCargaAerea.Application.Exceptions;
 using SistemaCargaAerea.Application.Interfaces.Repositories;
 using SistemaCargaAerea.Application.Interfaces.Services;
 using SistemaCargaAerea.Application.Mappings;
 using SistemaCargaAerea.Domain.Entities;
 using SistemaCargaAerea.Domain.Enums;
-using SistemaCargaAerea.Domain.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -13,231 +13,144 @@ namespace SistemaCargaAerea.Application.Services
 {
     public class VueloService : IVueloService
     {
-        private readonly IVueloRepository _vueloRepository;
-        private readonly IEncomiendaRepository _encomiendaRepository;
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IUnitOfWork _uow;
+        private readonly IEncomiendaService _encomiendaService;
 
-        public VueloService(
-            IVueloRepository vueloRepository,
-            IEncomiendaRepository encomiendaRepository,
-            IUnitOfWork unitOfWork)
+        public VueloService(IUnitOfWork uow, IEncomiendaService encomiendaService)
         {
-            _vueloRepository = vueloRepository;
-            _encomiendaRepository = encomiendaRepository;
-            _unitOfWork = unitOfWork;
+            _uow = uow;
+            _encomiendaService = encomiendaService;
         }
 
-        public async Task<IReadOnlyCollection<VueloResponse>>
-            ListarAsync(
-                string? destino,
-                EstadoVueloClave? estado,
-                CancellationToken cancellationToken)
+        public async Task<VueloResponse> ObtenerPorIdAsync(long id, CancellationToken ct)
         {
-            var vuelos = await _vueloRepository.ListarAsync(
-                destino,
-                estado,
-                cancellationToken);
-
-            return vuelos
-                .Select(x => x.ToResponse())
-                .ToList();
-        }
-
-        public async Task<VueloResponse> ObtenerAsync(
-            long id,
-            CancellationToken cancellationToken)
-        {
-            var vuelo = await ObtenerVueloAsync(
-                id,
-                false,
-                cancellationToken);
+            var vuelo = await _uow.Vuelos.ObtenerPorIdAsync(id, incluirRelaciones: true, ct)
+                ?? throw new NotFoundException(nameof(Vuelo), id);
 
             return vuelo.ToResponse();
         }
 
-        public async Task<VueloResponse> CrearAsync(
-            CrearVueloRequest request,
-            CancellationToken cancellationToken)
+        public async Task<List<VueloResponse>> ObtenerTodosAsync(CancellationToken ct)
         {
-            if (await _vueloRepository.ExisteCodigoAsync(
-                    request.CodigoVuelo,
-                    cancellationToken: cancellationToken))
-            {
+            var vuelos = await _uow.Vuelos.ObtenerTodosAsync(ct);
+            return vuelos.ToResponse();
+        }
+
+        public async Task<VueloResponse> CrearAsync(CrearVueloRequest request, CancellationToken ct)
+        {
+            if (await _uow.Vuelos.ExisteCodigoVueloAsync(request.CodigoVuelo, idExcluir: null, ct))
                 throw new InvalidOperationException(
-                    "Ya existe un vuelo con ese código.");
-            }
+                    $"Ya existe un vuelo con el código '{request.CodigoVuelo}'.");
+
+            _ = await _uow.Destinos.ObtenerPorIdAsync(request.DestinoId, ct)
+                ?? throw new NotFoundException(nameof(Destino), request.DestinoId);
+
+            var estadoProgramado = await _uow.EstadosVuelo
+                .ObtenerPorClaveAsync(EstadoVueloClave.Programado, ct);
 
             var vuelo = new Vuelo(
                 request.CodigoVuelo,
-                request.Destino,
+                request.DestinoId,
                 request.FechaVuelo,
                 request.HoraVuelo,
-                request.PesoMaximo);
+                request.PesoMaximo,
+                estadoProgramado);
 
-            await _vueloRepository.AgregarAsync(
-                vuelo,
-                cancellationToken);
+            _uow.Vuelos.Agregar(vuelo);
+            await _uow.GuardarCambiosAsync(ct);
 
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-            return vuelo.ToResponse();
+            return (await _uow.Vuelos.ObtenerPorIdAsync(vuelo.Id, incluirRelaciones: true, ct))!
+                .ToResponse();
         }
 
-        public async Task<VueloResponse> ActualizarAsync(
-            long id,
-            ActualizarVueloRequest request,
-            CancellationToken cancellationToken)
+        public async Task<VueloResponse> ActualizarAsync(long id, ActualizarVueloRequest request, CancellationToken ct)
         {
-            var vuelo = await ObtenerVueloAsync(
-                id,
-                false,
-                cancellationToken);
+            var vuelo = await _uow.Vuelos.ObtenerPorIdAsync(id, incluirRelaciones: true, ct)
+                ?? throw new NotFoundException(nameof(Vuelo), id);
 
-            if (await _vueloRepository.ExisteCodigoAsync(
-                    request.CodigoVuelo,
-                    id,
-                    cancellationToken))
-            {
+            if (await _uow.Vuelos.ExisteCodigoVueloAsync(request.CodigoVuelo, idExcluir: id, ct))
                 throw new InvalidOperationException(
-                    "Ya existe otro vuelo con ese código.");
-            }
+                    $"Ya existe otro vuelo con el código '{request.CodigoVuelo}'.");
+
+            _ = await _uow.Destinos.ObtenerPorIdAsync(request.DestinoId, ct)
+                ?? throw new NotFoundException(nameof(Destino), request.DestinoId);
 
             vuelo.Actualizar(
                 request.CodigoVuelo,
-                request.Destino,
+                request.DestinoId,
                 request.FechaVuelo,
                 request.HoraVuelo,
                 request.PesoMaximo);
 
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await _uow.GuardarCambiosAsync(ct);
 
-            return vuelo.ToResponse();
+            return (await _uow.Vuelos.ObtenerPorIdAsync(id, incluirRelaciones: true, ct))!
+                .ToResponse();
         }
 
-        public async Task EliminarAsync(
-            long id,
-            CancellationToken cancellationToken)
+        public async Task EliminarAsync(long id, CancellationToken ct)
         {
-            var vuelo = await ObtenerVueloAsync(
-                id,
-                true,
-                cancellationToken);
+            var vuelo = await _uow.Vuelos.ObtenerPorIdAsync(id, incluirRelaciones: true, ct)
+                ?? throw new NotFoundException(nameof(Vuelo), id);
 
-            if (vuelo.Encomiendas.Count != 0)
-            {
+            if (vuelo.Estado?.Clave != EstadoVueloClave.Programado)
                 throw new InvalidOperationException(
-                    "No se puede eliminar un vuelo con encomiendas.");
-            }
+                    "Solo se puede eliminar un vuelo en estado 'Programado'.");
 
-            _vueloRepository.Eliminar(vuelo);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            if (await _uow.Encomiendas.ExisteConVueloAsync(id, ct))
+                throw new InvalidOperationException(
+                    "No se puede eliminar el vuelo porque tiene encomiendas asignadas.");
+
+            _uow.Vuelos.Eliminar(vuelo);
+            await _uow.GuardarCambiosAsync(ct);
         }
 
-        public async Task AsignarEncomiendasAsync(
-            long vueloId,
-            IReadOnlyCollection<long> encomiendaIds,
-            CancellationToken cancellationToken)
+        public async Task<VueloResponse> IniciarVueloAsync(long id, CancellationToken ct)
         {
-            if (encomiendaIds.Count == 0)
-                throw new ArgumentException(
-                    "Debe seleccionar al menos una encomienda.");
+            var vuelo = await _uow.Vuelos.ObtenerPorIdAsync(id, incluirRelaciones: true, ct)
+                ?? throw new NotFoundException(nameof(Vuelo), id);
 
-            var idsSinDuplicados = encomiendaIds
-                .Distinct()
-                .ToArray();
+            var estadoEnVuelo = await _uow.EstadosVuelo
+                .ObtenerPorClaveAsync(EstadoVueloClave.EnVuelo, ct);
 
-            await _unitOfWork.EjecutarEnTransaccionAsync(
-                async ct =>
-                {
-                    var vuelo = await ObtenerVueloAsync(
-                        vueloId,
-                        true,
-                        ct);
+            vuelo.IniciarVuelo(estadoEnVuelo);
 
-                    var encomiendas =
-                        await _encomiendaRepository.ObtenerPorIdsAsync(
-                            idsSinDuplicados,
-                            ct);
+            await _encomiendaService.MarcarEncomiendasComoEmbarcadasAsync(id, ct);
 
-                    if (encomiendas.Count != idsSinDuplicados.Length)
-                    {
-                        throw new NotFoundException(
-                            "Una o más encomiendas no existen.");
-                    }
+            await _uow.GuardarCambiosAsync(ct);
 
-                    var pesoTotal = encomiendas.Sum(x => x.Peso);
-
-                    vuelo.AgregarPeso(pesoTotal);
-
-                    foreach (var encomienda in encomiendas)
-                        encomienda.AsignarAVuelo(vuelo.Id);
-                },
-                cancellationToken);
+            return (await _uow.Vuelos.ObtenerPorIdAsync(id, incluirRelaciones: true, ct))!
+                .ToResponse();
         }
 
-        public async Task AutorizarDespachoAsync(
-            long vueloId,
-            CancellationToken cancellationToken)
+        public async Task<VueloResponse> AterrizarAsync(long id, CancellationToken ct)
         {
-            await _unitOfWork.EjecutarEnTransaccionAsync(
-                async ct =>
-                {
-                    var vuelo = await ObtenerVueloAsync(
-                        vueloId,
-                        true,
-                        ct);
+            var vuelo = await _uow.Vuelos.ObtenerPorIdAsync(id, incluirRelaciones: true, ct)
+                ?? throw new NotFoundException(nameof(Vuelo), id);
 
-                    vuelo.AutorizarDespacho();
+            var estadoAterrizado = await _uow.EstadosVuelo
+                .ObtenerPorClaveAsync(EstadoVueloClave.Aterrizado, ct);
 
-                    foreach (var encomienda in vuelo.Encomiendas)
-                        encomienda.MarcarComoEmbarcada();
-                },
-                cancellationToken);
+            vuelo.Aterrizar(estadoAterrizado);
+            await _uow.GuardarCambiosAsync(ct);
+
+            return (await _uow.Vuelos.ObtenerPorIdAsync(id, incluirRelaciones: true, ct))!
+                .ToResponse();
         }
 
-        public async Task CancelarAsync(
-            long vueloId,
-            CancellationToken cancellationToken)
+        public async Task<VueloResponse> CancelarAsync(long id, CancellationToken ct)
         {
-            await _unitOfWork.EjecutarEnTransaccionAsync(
-                async ct =>
-                {
-                    var vuelo = await ObtenerVueloAsync(
-                        vueloId,
-                        true,
-                        ct);
+            var vuelo = await _uow.Vuelos.ObtenerPorIdAsync(id, incluirRelaciones: true, ct)
+                ?? throw new NotFoundException(nameof(Vuelo), id);
 
-                    vuelo.Cancelar();
+            var estadoCancelado = await _uow.EstadosVuelo
+                .ObtenerPorClaveAsync(EstadoVueloClave.Cancelado, ct);
 
-                    var pesoLiberado = vuelo.Encomiendas
-                        .Where(x =>
-                            x.Estado == EstadoEncomiendaClave.Asignada)
-                        .Sum(x => x.Peso);
+            vuelo.Cancelar(estadoCancelado);
+            await _uow.GuardarCambiosAsync(ct);
 
-                    foreach (var encomienda in vuelo.Encomiendas
-                                 .Where(x =>
-                                     x.Estado == EstadoEncomiendaClave.Asignada))
-                    {
-                        encomienda.LiberarDeVuelo();
-                    }
-
-                    if (pesoLiberado > 0)
-                        vuelo.RetirarPeso(pesoLiberado);
-                },
-                cancellationToken);
-        }
-
-        private async Task<Vuelo> ObtenerVueloAsync(
-            long id,
-            bool incluirEncomiendas,
-            CancellationToken cancellationToken)
-        {
-            return await _vueloRepository.ObtenerPorIdAsync(
-                       id,
-                       incluirEncomiendas,
-                       cancellationToken)
-                   ?? throw new NotFoundException(
-                       $"No se encontró el vuelo {id}.");
+            return (await _uow.Vuelos.ObtenerPorIdAsync(id, incluirRelaciones: true, ct))!
+                .ToResponse();
         }
     }
 }

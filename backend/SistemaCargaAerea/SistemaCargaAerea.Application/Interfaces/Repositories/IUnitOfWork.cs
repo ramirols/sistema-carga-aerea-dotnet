@@ -6,10 +6,14 @@ namespace SistemaCargaAerea.Application.Interfaces.Repositories
 {
     public interface IUnitOfWork
     {
-        Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
-
-        Task EjecutarEnTransaccionAsync(
-            Func<CancellationToken, Task> operacion,
-            CancellationToken cancellationToken = default);
+        IDestinoRepository Destinos { get; }
+        IPersonaRepository Personas { get; }
+        IEstadoEncomiendaRepository EstadosEncomienda { get; }
+        IEstadoVueloRepository EstadosVuelo { get; }
+        IRolRepository Roles { get; }
+        IUsuarioRepository Usuarios { get; }
+        IVueloRepository Vuelos { get; }
+        IEncomiendaRepository Encomiendas { get; }
+        Task<int> GuardarCambiosAsync(CancellationToken ct);
     }
 }

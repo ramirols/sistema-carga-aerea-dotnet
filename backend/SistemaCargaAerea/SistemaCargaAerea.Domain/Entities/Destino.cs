@@ -6,10 +6,10 @@ namespace SistemaCargaAerea.Domain.Entities
 {
     public class Destino
     {
-        public long Id { get; set; }
-        public string Nombre { get; set; } = string.Empty;
-        public string CodigoIATA { get; set; } = string.Empty;
-        public string Pais { get; set; } = string.Empty;
+        public long Id { get; private set; }
+        public string Nombre { get; private set; } = string.Empty;
+        public string CodigoIATA { get; private set; } = string.Empty;
+        public string Pais { get; private set; } = string.Empty;
 
         public Destino()
         {

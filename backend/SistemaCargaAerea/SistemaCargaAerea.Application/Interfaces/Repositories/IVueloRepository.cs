@@ -1,5 +1,4 @@
 ﻿using SistemaCargaAerea.Domain.Entities;
-using SistemaCargaAerea.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -8,25 +7,12 @@ namespace SistemaCargaAerea.Application.Interfaces.Repositories
 {
     public interface IVueloRepository
     {
-        Task<IReadOnlyCollection<Vuelo>> ListarAsync(
-        string? destino = null,
-        EstadoVueloClave? estado = null,
-        CancellationToken cancellationToken = default);
-
-        Task<Vuelo?> ObtenerPorIdAsync(
-            long id,
-            bool incluirEncomiendas = false,
-            CancellationToken cancellationToken = default);
-
-        Task<bool> ExisteCodigoAsync(
-            string codigo,
-            long? idExcluir = null,
-            CancellationToken cancellationToken = default);
-
-        Task AgregarAsync(
-            Vuelo vuelo,
-            CancellationToken cancellationToken = default);
-
+        Task<Vuelo?> ObtenerPorIdAsync(long id, bool incluirRelaciones, CancellationToken ct);
+        Task<List<Vuelo>> ObtenerTodosAsync(CancellationToken ct);
+        Task<bool> ExisteCodigoVueloAsync(string codigoVuelo, long? idExcluir, CancellationToken ct);
+        Task<bool> ExisteConDestinoAsync(long destinoId, CancellationToken ct);
+        Task<bool> ExisteConEstadoAsync(long estadoId, CancellationToken ct);
+        void Agregar(Vuelo vuelo);
         void Eliminar(Vuelo vuelo);
     }
 }
