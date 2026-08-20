@@ -13,6 +13,7 @@ import {
     Tags,
     UserCog,
     UsersRound,
+    type LucideIcon,
 } from "lucide-react"
 
 import {
@@ -28,9 +29,23 @@ import {
     SidebarMenuItem,
     SidebarRail,
 } from "@/components/ui/sidebar"
+
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
+
 import { useAuth } from "@/providers/auth-provider"
 
-const operationNavigation = [
+interface NavigationItem {
+    label: string
+    href: string
+    icon: LucideIcon
+}
+
+const operationNavigation: NavigationItem[] = [
     {
         label: "Dashboard",
         href: "/dashboard",
@@ -58,7 +73,7 @@ const operationNavigation = [
     },
 ]
 
-const administrationNavigation = [
+const administrationNavigation: NavigationItem[] = [
     {
         label: "Usuarios",
         href: "/usuarios",
@@ -83,7 +98,34 @@ const administrationNavigation = [
 
 interface NavigationGroupProps {
     label: string
-    items: typeof operationNavigation
+    items: NavigationItem[]
+}
+
+function NavigationTooltip({
+    children,
+    content,
+}: {
+    children: React.ReactElement
+    content: string
+}) {
+    return (
+        <Tooltip>
+            <TooltipTrigger render={children} />
+
+            <TooltipContent
+                side="right"
+                sideOffset={10}
+                className="
+          rounded-lg border border-slate-800
+          bg-slate-950 px-2.5 py-1.5
+          text-xs font-medium text-white
+          shadow-xl
+        "
+            >
+                {content}
+            </TooltipContent>
+        </Tooltip>
+    )
 }
 
 function NavigationGroup({
@@ -93,11 +135,18 @@ function NavigationGroup({
     const pathname = usePathname()
 
     return (
-        <SidebarGroup>
-            <SidebarGroupLabel>{label}</SidebarGroupLabel>
+        <SidebarGroup className="px-2 py-3">
+            <SidebarGroupLabel
+                className="
+          mb-1 px-3 text-[10px] font-semibold
+          uppercase tracking-[0.16em] text-slate-400
+        "
+            >
+                {label}
+            </SidebarGroupLabel>
 
             <SidebarGroupContent>
-                <SidebarMenu>
+                <SidebarMenu className="gap-1">
                     {items.map((item) => {
                         const Icon = item.icon
 
@@ -107,15 +156,44 @@ function NavigationGroup({
 
                         return (
                             <SidebarMenuItem key={item.href}>
-                                <SidebarMenuButton
-                                    render={<Link href={item.href} />}
-                                    isActive={active}
-                                    tooltip={item.label}
-                                    className="data-[active=true]:bg-blue-600 data-[active=true]:text-white data-[active=true]:hover:bg-blue-600 data-[active=true]:hover:text-white"
-                                >
-                                    <Icon />
-                                    <span>{item.label}</span>
-                                </SidebarMenuButton>
+                                <NavigationTooltip
+                                    content={item.label}
+                                    children={
+                                        <SidebarMenuButton
+                                            render={<Link href={item.href} />}
+                                            isActive={active}
+                                            className="
+                        relative h-10 rounded-xl px-3
+                        text-slate-600 transition-colors
+
+                        before:absolute
+                        before:left-0
+                        before:top-1/2
+                        before:h-5
+                        before:w-[3px]
+                        before:-translate-y-1/2
+                        before:rounded-r-full
+                        before:bg-transparent
+                        before:transition-colors
+
+                        hover:bg-slate-100
+                        hover:text-slate-950
+
+                        data-[active=true]:bg-blue-50
+                        data-[active=true]:font-medium
+                        data-[active=true]:text-blue-700
+                        data-[active=true]:before:bg-blue-600
+
+                        data-[active=true]:hover:bg-blue-50
+                        data-[active=true]:hover:text-blue-700
+                      "
+                                        >
+                                            <Icon className="size-[18px] shrink-0" />
+
+                                            <span>{item.label}</span>
+                                        </SidebarMenuButton>
+                                    }
+                                />
                             </SidebarMenuItem>
                         )
                     })}
@@ -128,94 +206,145 @@ function NavigationGroup({
 export function AppSidebar() {
     const { user, logout } = useAuth()
 
-    const normalizedRole = user?.rol.trim().toLowerCase()
+    const normalizedRole = user?.rol
+        ?.trim()
+        .toLowerCase()
 
     const isAdmin =
         normalizedRole === "admin" ||
         normalizedRole === "administrador"
 
+    const userInitial =
+        user?.nombreUsuario
+            ?.trim()
+            .charAt(0)
+            .toUpperCase() || "U"
+
     return (
-        <Sidebar
-            collapsible="icon"
-            variant="sidebar"
-            className="border-r"
-        >
-            <SidebarHeader>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton
-                            size="lg"
-                            render={<Link href="/dashboard" />}
-                            tooltip="Carga Aérea"
-                            className="h-14"
-                        >
-                            <div className="flex aspect-square size-9 items-center justify-center rounded-xl bg-blue-600 text-white">
-                                <Plane className="size-5" />
-                            </div>
+        <TooltipProvider>
+            <Sidebar
+                collapsible="icon"
+                variant="sidebar"
+                className="border-r border-slate-200/70"
+            >
+                <SidebarHeader className="border-b border-slate-200/70 p-2">
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <NavigationTooltip
+                                content="Carga Aérea"
+                                children={
+                                    <SidebarMenuButton
+                                        size="lg"
+                                        render={<Link href="/dashboard" />}
+                                        className="
+                      h-12 rounded-xl px-2
+                      transition-colors
+                      hover:bg-slate-100
+                    "
+                                    >
+                                        <div
+                                            className="
+                        flex aspect-square size-9 shrink-0
+                        items-center justify-center
+                        rounded-xl bg-blue-600 text-white
+                        shadow-sm shadow-blue-600/20
+                      "
+                                        >
+                                            <Plane
+                                                className="size-[18px] -rotate-12"
+                                                aria-hidden="true"
+                                            />
+                                        </div>
 
-                            <div className="grid flex-1 text-left text-sm leading-tight">
-                                <span className="truncate font-semibold">
-                                    Carga Aérea
-                                </span>
-                                <span className="truncate text-xs text-muted-foreground">
-                                    Panel administrativo
-                                </span>
-                            </div>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
-            </SidebarHeader>
+                                        <div className="grid min-w-0 flex-1 text-left leading-tight">
+                                            <span className="truncate text-sm font-semibold text-slate-900">
+                                                Carga Aérea
+                                            </span>
 
-            <SidebarContent>
-                <NavigationGroup
-                    label="Operaciones"
-                    items={operationNavigation}
-                />
+                                            <span className="truncate text-xs text-slate-500">
+                                                Panel administrativo
+                                            </span>
+                                        </div>
+                                    </SidebarMenuButton>
+                                }
+                            />
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarHeader>
 
-                {isAdmin && (
+                <SidebarContent className="py-2">
                     <NavigationGroup
-                        label="Administración"
-                        items={administrationNavigation}
+                        label="Operaciones"
+                        items={operationNavigation}
                     />
-                )}
-            </SidebarContent>
 
-            <SidebarFooter>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <div className="mb-1 flex items-center gap-3 rounded-lg px-2 py-2 group-data-[collapsible=icon]:hidden">
-                            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700">
-                                {user?.nombreUsuario
-                                    ?.charAt(0)
-                                    .toUpperCase()}
+                    {isAdmin && (
+                        <NavigationGroup
+                            label="Administración"
+                            items={administrationNavigation}
+                        />
+                    )}
+                </SidebarContent>
+
+                <SidebarFooter className="border-t border-slate-200/70 p-2">
+                    <SidebarMenu className="gap-1">
+                        <SidebarMenuItem>
+                            <div
+                                className="
+                  mb-1 flex items-center gap-3
+                  rounded-xl bg-slate-50
+                  px-2.5 py-2.5
+                  group-data-[collapsible=icon]:hidden
+                "
+                            >
+                                <div
+                                    className="
+                    flex size-9 shrink-0 items-center
+                    justify-center rounded-full
+                    bg-blue-100 text-sm font-semibold
+                    text-blue-700
+                  "
+                                >
+                                    {userInitial}
+                                </div>
+
+                                <div className="min-w-0 flex-1">
+                                    <p className="truncate text-sm font-medium text-slate-900">
+                                        {user?.nombreUsuario || "Usuario"}
+                                    </p>
+
+                                    <p className="truncate text-xs capitalize text-slate-500">
+                                        {user?.rol || "Sin rol"}
+                                    </p>
+                                </div>
                             </div>
+                        </SidebarMenuItem>
 
-                            <div className="min-w-0">
-                                <p className="truncate text-sm font-medium">
-                                    {user?.nombreUsuario}
-                                </p>
-                                <p className="truncate text-xs text-muted-foreground">
-                                    {user?.rol}
-                                </p>
-                            </div>
-                        </div>
-                    </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <NavigationTooltip
+                                content="Cerrar sesión"
+                                children={
+                                    <SidebarMenuButton
+                                        type="button"
+                                        onClick={() => void logout()}
+                                        className="
+                      h-10 rounded-xl px-3
+                      text-slate-500 transition-colors
+                      hover:bg-red-50 hover:text-red-600
+                    "
+                                    >
+                                        <LogOut className="size-[18px]" />
 
-                    <SidebarMenuItem>
-                        <SidebarMenuButton
-                            type="button"
-                            onClick={() => void logout()}
-                            tooltip="Cerrar sesión"
-                            className="text-slate-600 hover:bg-red-50 hover:text-red-600"
-                        >
-                            <LogOut />
-                            <span>Cerrar sesión</span>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
-            </SidebarFooter>
+                                        <span>Cerrar sesión</span>
+                                    </SidebarMenuButton>
+                                }
+                            />
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarFooter>
 
-            <SidebarRail />
-        </Sidebar>
+                <SidebarRail />
+            </Sidebar>
+        </TooltipProvider>
     )
 }

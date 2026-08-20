@@ -46,25 +46,6 @@ export function AppShell({
                     </div>
 
                     <div className="flex items-center gap-2 sm:gap-3">
-                        <div className="relative hidden w-64 lg:block">
-                            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-
-                            <Input
-                                placeholder="Buscar..."
-                                className="h-9 bg-slate-50 pl-9"
-                            />
-                        </div>
-
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="relative"
-                            aria-label="Notificaciones"
-                        >
-                            <Bell className="size-4" />
-                            <span className="absolute right-2 top-2 size-1.5 rounded-full bg-blue-600" />
-                        </Button>
-
                         <div className="hidden text-right sm:block">
                             <p className="max-w-40 truncate text-sm font-medium">
                                 {user?.nombreUsuario}
