@@ -31,7 +31,9 @@ namespace SistemaCargaAerea.Application.DTOs.Vuelos
     {
         public long Id { get; init; }
         public string CodigoVuelo { get; init; } = string.Empty;
+        public long DestinoId { get; init; }
         public string Destino { get; init; } = string.Empty;
+        
         public DateOnly FechaVuelo { get; init; }
         public TimeOnly HoraVuelo { get; init; }
         public decimal PesoMaximo { get; init; }

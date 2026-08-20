@@ -36,9 +36,13 @@ namespace SistemaCargaAerea.Application.DTOs.Encomiendas
         public string Codigo { get; init; } = string.Empty;
         public string Descripcion { get; init; } = string.Empty;
         public decimal Peso { get; init; }
+        public long RemitenteId { get; init; }
         public string Remitente { get; init; } = string.Empty;
+        public long DestinatarioId { get; init; }
         public string Destinatario { get; init; } = string.Empty;
+        public long EstadoId { get; init; }
         public string Estado { get; init; } = string.Empty;
+        public long? VueloId { get; init; }
         public string? VueloCodigo { get; init; }
         public DateTime FechaRegistro { get; init; }
     }

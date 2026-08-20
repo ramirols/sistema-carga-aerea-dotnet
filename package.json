@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "backend": "dotnet watch --project backend/SistemaCargaAerea/SistemaCargaAerea.Api/SistemaCargaAerea.Api.csproj run",
-    "frontend": "pnpm --dir frontend start",
+    "frontend": "pnpm --dir frontend dev",
     "dev": "concurrently -k -n BACKEND,FRONTEND -c blue,magenta \"pnpm backend\" \"pnpm frontend\"",
     "restore:backend": "dotnet restore backend/SistemaCargaAerea.sln",
     "restore:frontend": "pnpm --dir frontend install",

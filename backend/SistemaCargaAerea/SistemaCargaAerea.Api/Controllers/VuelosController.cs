@@ -13,10 +13,12 @@ namespace SistemaCargaAerea.Api.Controllers
     public class VuelosController : ControllerBase
     {
         private readonly IVueloService _service;
+        private readonly IEncomiendaService _encomiendaService;
 
-        public VuelosController(IVueloService service)
+        public VuelosController(IVueloService service, IEncomiendaService encomiendaService)
         {
             _service = service;
+            _encomiendaService = encomiendaService;
         }
 
         [HttpGet]
@@ -61,11 +63,11 @@ namespace SistemaCargaAerea.Api.Controllers
 
         [HttpPost("{id:long}/encomiendas")]
         public async Task<ActionResult<VueloResponse>> AsignarEncomiendas(
-            long id, [FromBody] AsignarEncomiendasRequest request, CancellationToken ct)
+            long id,
+            [FromBody] AsignarEncomiendasRequest request,
+            CancellationToken ct)
         {
-            var encomiendaService = HttpContext.RequestServices
-                .GetRequiredService<IEncomiendaService>();
-
+            var encomiendaService = HttpContext.RequestServices.GetRequiredService<IEncomiendaService>();
             var resultado = await encomiendaService.AsignarAVueloAsync(id, request, ct);
             return Ok(resultado);
         }

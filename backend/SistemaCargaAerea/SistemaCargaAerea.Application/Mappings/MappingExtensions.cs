@@ -73,6 +73,7 @@ namespace SistemaCargaAerea.Application.Mappings
             {
                 Id = vuelo.Id,
                 CodigoVuelo = vuelo.CodigoVuelo,
+                DestinoId = vuelo.DestinoId,
                 Destino = vuelo.Destino?.Nombre ?? string.Empty,
                 FechaVuelo = vuelo.FechaVuelo,
                 HoraVuelo = vuelo.HoraVuelo,
@@ -89,9 +90,13 @@ namespace SistemaCargaAerea.Application.Mappings
                 Codigo = encomienda.Codigo,
                 Descripcion = encomienda.Descripcion,
                 Peso = encomienda.Peso,
+                RemitenteId = encomienda.RemitenteId,
                 Remitente = encomienda.Remitente?.Nombre ?? string.Empty,
+                DestinatarioId = encomienda.DestinatarioId,
                 Destinatario = encomienda.Destinatario?.Nombre ?? string.Empty,
+                EstadoId = encomienda.EstadoId,
                 Estado = encomienda.Estado?.Nombre ?? string.Empty,
+                VueloId = encomienda.VueloId,
                 VueloCodigo = encomienda.Vuelo?.CodigoVuelo,
                 FechaRegistro = encomienda.FechaRegistro
             };
